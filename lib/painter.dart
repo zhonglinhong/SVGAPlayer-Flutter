@@ -97,7 +97,7 @@ class _SVGAPainter extends CustomPainter {
       final frameRect =
           Rect.fromLTRB(0, 0, frameItem.layout.width, frameItem.layout.height);
       final frameAlpha =
-          frameItem.hasAlpha() ? (frameItem.alpha * 255).toInt() : 255;
+          frameItem.hasAlpha() ? (frameItem.alpha * 255).toInt() : 0;
       drawBitmap(canvas, imageKey, frameRect, frameAlpha);
       drawShape(canvas, frameItem.shapes, frameAlpha);
       // draw dynamic
@@ -438,6 +438,25 @@ class _SVGAPainter extends CustomPainter {
     if (dynamicText[imageKey] == null) return;
 
     TextPainter? textPainter = dynamicText[imageKey];
+    if (textPainter != null) {
+      var textSpan = textPainter.text;
+      if (textSpan is TextSpan) {
+        var color = textSpan.style?.color;
+        if (color != null) {
+          var a = color.alpha * frameAlpha / 255;
+          var r = color.red;
+          var g = color.green;
+          var b = color.blue;
+          textPainter = TextPainter(
+              text: TextSpan(
+                  text: textSpan.text,
+                  style: textSpan.style
+                      ?.copyWith(color: Color.fromARGB(a.toInt(), r, g, b))),
+              textDirection: TextDirection.ltr);
+          textPainter.layout();
+        }
+      }
+    }
 
     textPainter?.paint(
       canvas,
